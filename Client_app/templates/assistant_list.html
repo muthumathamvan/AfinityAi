@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Assistants — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> AI Engine
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">Assistants</h1>
+      <p class="text-afinity-muted text-sm mt-1">Your roster of refined conversational agents.</p>
+    </div>
+    <a href="{% url 'assistant' %}" class="btn btn-primary inline-flex items-center gap-2">
+      <i class="bi bi-plus-lg"></i><span>Create Assistant</span>
+    </a>
+  </header>
+
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for assistant in assistants %}
+    <div>
+      {% if assistant.widget_code %}
+      <a href="{% url 'widget_configuration' assistant.id %}" class="no-underline text-inherit">
+      {% endif %}
+        <div class="assistant-card h-full p-6 border border-afinity-line/60 rounded-2xl bg-white hover:shadow-soft hover:-translate-y-0.5 transition-all">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="assistant-avatar w-12 h-12 rounded-xl grid place-items-center text-lg font-display font-bold">{{ assistant.agent_name|slice:":1" }}</div>
+            <div>
+              <h6 class="mb-0 font-display text-lg text-afinity-ink font-semibold">{{ assistant.agent_name }}</h6>
+              <small class="text-afinity-muted">{{ assistant.primary_language }}</small>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="badge-pill inline-flex items-center gap-1 px-3 py-1 text-xs"><i class="bi bi-mic text-afinity-500"></i> {{ assistant.voice_name }}</span>
+            <span class="badge-pill inline-flex items-center gap-1 px-3 py-1 text-xs"><i class="bi bi-globe text-afinity-500"></i> {{ assistant.secondary_languages }}</span>
+          </div>
+          <div class="text-xs text-afinity-muted border-t border-afinity-line/60 pt-3">
+            Created on {{ assistant.created_at|date:"M d, Y" }}
+          </div>
+        </div>
+      {% if assistant.widget_code %}</a>{% endif %}
+    </div>
+    {% empty %}
+    <div class="col-span-full">
+      <div class="bg-white rounded-2xl border border-dashed border-afinity-line p-12 text-center">
+        <i class="bi bi-robot text-5xl text-afinity-300 block mb-3"></i>
+        <h5 class="font-display text-afinity-ink mb-1">No assistants yet</h5>
+        <p class="text-afinity-muted text-sm mb-4">Craft your first conversational agent to get started.</p>
+        <a href="{% url 'assistant' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Create Assistant</a>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+{% endblock %}

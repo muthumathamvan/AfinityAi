@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Widget Configuration — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> Widget
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">Widget Configuration</h1>
+      <p class="text-afinity-muted text-sm mt-1">Tailor your embedded voice widget's appearance &amp; behaviour.</p>
+    </div>
+  </header>
+
+  <section class="card slide-up p-6 lg:p-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- LEFT -->
+      <div class="lg:col-span-5">
+        <h4 class="mb-2">Embed Options</h4>
+        <p class="text-afinity-muted text-sm mb-5 leading-relaxed">Select the widget version and customise appearance, branding and feedback flow to match your brand.</p>
+
+        <div class="flex flex-wrap items-center gap-3 mt-4">
+          <select class="form-select" style="max-width: 220px;">
+            <option>1.0.20-alpha.55</option>
+            <option>1.0.19</option>
+            <option>1.0.18</option>
+          </select>
+        </div>
+
+        <div class="mt-8 space-y-3">
+          <div class="config-box p-4 rounded-xl border cursor-pointer flex justify-between items-center">
+            <div>
+              <strong class="text-afinity-ink">Theme</strong>
+              <div class="text-afinity-muted text-sm font-mono">theme: {}</div>
+            </div>
+            <i class="bi bi-chevron-right text-afinity-muted"></i>
+          </div>
+          <div class="config-box p-4 rounded-xl border cursor-pointer flex justify-between items-center">
+            <div>
+              <strong class="text-afinity-ink">Widget Size</strong>
+              <div class="text-afinity-muted text-sm font-mono">innerWindowProps: {}</div>
+            </div>
+            <i class="bi bi-chevron-right text-afinity-muted"></i>
+          </div>
+          <div class="config-box p-4 rounded-xl border cursor-pointer flex justify-between items-center">
+            <div>
+              <strong class="text-afinity-ink">Feedback Screen</strong>
+              <div class="text-afinity-muted text-sm font-mono">feedbackScreen: {}</div>
+            </div>
+            <i class="bi bi-chevron-right text-afinity-muted"></i>
+          </div>
+          <div class="config-box p-4 rounded-xl border cursor-pointer flex justify-between items-center">
+            <div>
+              <strong class="text-afinity-ink">Branding</strong>
+              <div class="text-afinity-muted text-sm">title, description, logoUrl</div>
+            </div>
+            <i class="bi bi-chevron-right text-afinity-muted"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="lg:col-span-7">
+        <div class="flex items-center justify-between mb-4">
+          <h5 class="mb-0 font-display text-afinity-ink">Generated Code</h5>
+          <a href="#" class="text-sm font-medium text-afinity-500 hover:text-afinity-ink transition">Docs <i class="bi bi-arrow-up-right ms-1"></i></a>
+        </div>
+
+        <div class="relative generated-box p-5 rounded-xl border bg-afinity-ink text-afinity-100 font-mono overflow-hidden">
+          <button class="copy-btn absolute top-4 right-4 px-4 py-1 text-xs font-medium" onclick="copyCode()">
+            <i class="bi bi-clipboard me-1"></i>Copy
+          </button>
+          <pre id="embedCode" class="whitespace-pre-wrap text-xs leading-relaxed m-0 pt-8" style="color:#EEC887;">
+&lt;elevenlabs-convai agent-id="agent_2701kcjs6rh8f0gsafa3pzrgw41x"&gt;&lt;/elevenlabs-convai&gt;
+&lt;script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"&gt;&lt;/script&gt;
+&lt;script&gt;
+const KEYWORDS = ["powered by", "elevenlabs", "agents"];
+setInterval(() =&gt; {
+    const w = document.querySelector("elevenlabs-convai");
+    if (!w || !w.shadowRoot) return;
+    w.shadowRoot.querySelectorAll("*").forEach(el =&gt; {
+        const t = (el.textContent || "").toLowerCase();
+        if (KEYWORDS.some(k =&gt; t.includes(k))) el.style.display = "none";
+    });
+    w.style.visibility = "visible";
+}, 300);
+&lt;/script&gt;
+          </pre>
+        </div>
+
+        <p class="text-xs text-afinity-muted mt-3 leading-relaxed">
+          <i class="bi bi-info-circle me-1"></i>
+          Paste this snippet right before the closing <code>&lt;/body&gt;</code> tag of any page where you want the widget to appear.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+<script>
+function copyCode() {
+  const code = document.getElementById("embedCode").innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+    setTimeout(() => btn.innerHTML = original, 1800);
+  });
+}
+</script>
+{% endblock %}

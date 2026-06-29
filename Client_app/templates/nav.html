@@ -1,0 +1,95 @@
+{% load static %}
+<aside id="sidebar" class="active" aria-label="Main navigation">
+  <div class="sidebar-wrapper">
+
+    <div class="sidebar-header px-6 flex items-center justify-between">
+      <a href="/home" class="logo flex items-center gap-2 text-white no-underline">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-afinity-300 to-afinity-400 text-afinity-ink font-display font-bold text-lg shadow-lg">A</span>
+        <span class="font-display font-semibold text-lg tracking-tight text-white">Afinity<span class="text-afinity-300">.ai</span></span>
+      </a>
+      <button type="button" class="lg:hidden text-white/70 hover:text-white transition -mr-2 p-2" onclick="afToggleSidebar(false)" aria-label="Close navigation">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-menu">
+      <ul class="menu">
+        <li class="sidebar-title">Workspace</li>
+
+        <li class="sidebar-item">
+          <a href="/home" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/ai_form" class="sidebar-link">
+            <i class="bi bi-telephone-outbound-fill"></i><span>AI Calling</span>
+          </a>
+        </li>
+
+        <li class="sidebar-title">Call Intelligence</li>
+
+        <li class="sidebar-item">
+          <a href="/call_history" class="sidebar-link">
+            <i class="bi bi-clock-history"></i><span>Outbound History</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/inboundcall_loc" class="sidebar-link">
+            <i class="bi bi-telephone-inbound-fill"></i><span>Inbound History</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/widget_calls_loc" class="sidebar-link">
+            <i class="bi bi-chat-dots-fill"></i><span>Widget Calls</span>
+          </a>
+        </li>
+
+        <li class="sidebar-title">Organization</li>
+
+        <li class="sidebar-item">
+          <a href="/client" class="sidebar-link">
+            <i class="bi bi-building-fill"></i><span>Tenant</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/branch" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i><span>Branch</span>
+          </a>
+        </li>
+
+        {% if request.user.is_authenticated and request.user.role == "admin" %}
+        <li class="sidebar-item">
+          <a href="/assistant_list" class="sidebar-link">
+            <i class="bi bi-robot"></i><span>Assistants</span>
+          </a>
+        </li>
+        {% endif %}
+
+        <li class="sidebar-title">Integrations</li>
+
+        <li class="sidebar-item">
+          <a href="/crm/" class="sidebar-link">
+            <i class="bi bi-people-fill"></i><span>CRM Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/hubspot_config" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i><span>HubSpot Config</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Bottom brand touch -->
+      <div class="px-4 mt-8">
+        <div class="rounded-2xl border border-afinity-300/15 bg-gradient-to-br from-afinity-300/10 to-transparent p-4">
+          <p class="text-[11px] uppercase tracking-[0.22em] text-afinity-300/80 font-semibold mb-1">Enterprise</p>
+          <p class="text-sm text-white/85 font-medium leading-snug mb-3">Premium Conversational AI for luxury brands.</p>
+          <a href="/hubspot_config" class="inline-flex items-center gap-1 text-xs font-semibold text-afinity-300 hover:text-white transition">
+            Configure integrations <i class="bi bi-arrow-right text-xs"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}CRM Dashboard — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> Integrations
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">CRM Dashboard</h1>
+      <p class="text-afinity-muted text-sm mt-1">Unified lead intelligence across dashboard &amp; HubSpot sources.</p>
+    </div>
+
+    <div class="w-full md:w-auto">
+      <div class="bg-white rounded-2xl border border-afinity-line/70 shadow-soft flex items-center gap-4 py-3 px-4 slide-up">
+        {% if request.user.is_authenticated and request.user.profile_image %}
+          <div class="avatar avatar-lg ring-2 ring-afinity-300/40">
+            <img src="{{ request.user.profile_image.url }}" alt="{{ request.user.username }}">
+          </div>
+        {% else %}
+          <div class="avatar avatar-lg ring-2 ring-afinity-300/40" style="background:linear-gradient(135deg,#EEC887,#B8935A);">
+            <span class="avatar-initial font-display text-lg font-bold" style="background:transparent;color:#1C1917;">
+              {% if request.user.is_authenticated %}{{ request.user.get_username|slice:":1"|upper }}{% else %}A{% endif %}
+            </span>
+          </div>
+        {% endif %}
+        <div class="leading-tight">
+          <p class="text-xs uppercase tracking-widest text-afinity-muted">Agent</p>
+          <p class="font-display text-lg text-afinity-ink font-semibold">{{ agent_id|default:"All" }}</p>
+          <p class="text-xs text-afinity-muted">Total Clients: {{ clients|length }}</p>
+        </div>
+        <a href="/logout" class="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-xl border border-afinity-line hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-afinity-ink2 transition" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <section class="card mb-6 slide-up">
+    <div class="card-header"><h4 class="mb-0">Filter Options</h4></div>
+    <div class="card-body">
+      <form method="GET" action="/crm/" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div>
+          <label class="form-label">Agent ID</label>
+          <input type="text" class="form-control" name="agent_id" value="{{ request.GET.agent_id|default:'' }}" placeholder="Enter ID">
+        </div>
+        <div>
+          <label class="form-label">Source</label>
+          <select class="form-select" name="source">
+            <option value="">All Sources</option>
+            <option value="dashboard" {% if request.GET.source == 'dashboard' %}selected{% endif %}>Dashboard</option>
+            <option value="hubspot" {% if request.GET.source == 'hubspot' %}selected{% endif %}>HubSpot</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Feedback</label>
+          <select class="form-select" name="feedback">
+            <option value="">All Feedback</option>
+            <option value="**Interested**" {% if request.GET.feedback == '**Interested**' %}selected{% endif %}>Interested</option>
+            <option value="**Follow up**" {% if request.GET.feedback == '**Follow up**' %}selected{% endif %}>Follow Up</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">From Date</label>
+          <input type="date" class="form-control" name="from" value="{{ request.GET.from|default:'' }}">
+        </div>
+        <div>
+          <label class="form-label">To Date</label>
+          <input type="date" class="form-control" name="to" value="{{ request.GET.to|default:'' }}">
+        </div>
+        <div>
+          <label class="form-label">Sort By</label>
+          <select class="form-select" name="sort">
+            <option value="-date" {% if request.GET.sort == '-date' %}selected{% endif %}>Date (Newest)</option>
+            <option value="date" {% if request.GET.sort == 'date' %}selected{% endif %}>Date (Oldest)</option>
+            <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name</option>
+            <option value="feedback" {% if request.GET.sort == 'feedback' %}selected{% endif %}>Feedback</option>
+          </select>
+        </div>
+        <div class="md:col-span-3 lg:col-span-6 flex flex-wrap gap-3 pt-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Apply Filters</button>
+          <a href="/crm/" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>Reset</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    <div class="stat-card-small bg-success slide-up"><div class="stat-content"><h6>Total Leads</h6><h3>{{ total_count }}</h3></div><i class="bi bi-person-check-fill stat-icon"></i></div>
+    <div class="stat-card-small bg-primary slide-up"><div class="stat-content"><h6>Dashboard Leads</h6><h3>{{ dashboard_count }}</h3></div><i class="bi bi-telephone-fill stat-icon"></i></div>
+    <div class="stat-card-small bg-info slide-up"><div class="stat-content"><h6>HubSpot Leads</h6><h3>{{ hubspot_count }}</h3></div><i class="bi bi-cloud-download stat-icon"></i></div>
+    <div class="stat-card-small bg-warning slide-up"><div class="stat-content"><h6>Follow Up Required</h6><h3 id="followUpCount">0</h3></div><i class="bi bi-calendar-check stat-icon"></i></div>
+  </section>
+
+  <!-- Client Table -->
+  <section class="card slide-up">
+    <div class="card-header"><h4 class="mb-0">Client Information</h4></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Source</th>
+              <th>Date</th>
+              <th>Feedback</th>
+              <th>Summary</th>
+              <th class="text-end pr-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for client in clients %}
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar avatar-sm">
+                    <span class="avatar-initial rounded-full {% if client.source == 'hubspot' %}bg-label-info{% else %}bg-label-primary{% endif %}">
+                      {{ client.name|default:"N"|slice:":1"|upper }}
+                    </span>
+                  </div>
+                  <div>
+                    <p class="mb-0 font-medium text-afinity-ink">{{ client.name|default:"N/A" }}</p>
+                    <small class="text-afinity-muted">{{ client.uploader_name|default:"Unknown" }}</small>
+                  </div>
+                </div>
+              </td>
+              <td><span class="font-mono text-sm">{{ client.phone_no|default:"N/A" }}</span></td>
+              <td><span class="text-truncate inline-block text-sm text-afinity-muted" style="max-width:150px;" title="{{ client.address|default:'N/A' }}">{{ client.address|default:"N/A" }}</span></td>
+              <td>
+                {% if client.source == "hubspot" %}
+                  <span class="badge bg-info"><i class="bi bi-cloud-download me-1"></i>HubSpot</span>
+                {% else %}
+                  <span class="badge bg-primary"><i class="bi bi-telephone me-1"></i>Dashboard</span>
+                {% endif %}
+              </td>
+              <td><span class="text-afinity-muted text-sm">{{ client.date|date:"M d, Y" }}</span></td>
+              <td>
+                {% if client.feedback == "**Interested**" %}<span class="badge bg-success">Interested</span>
+                {% elif client.feedback == "**Follow up**" %}<span class="badge bg-warning">Follow Up</span>
+                {% elif client.feedback == "HubSpot Lead" %}<span class="badge bg-info">HubSpot Lead</span>
+                {% else %}<span class="badge bg-secondary">{{ client.feedback|default:"N/A" }}</span>{% endif %}
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="showSummary('{{ client.id }}', '{{ client.summary|default:"No summary available"|escapejs }}')"><i class="bi bi-eye"></i> View</button>
+              </td>
+              <td class="text-end pr-4">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="tel:{{ client.phone_no }}"><i class="bi bi-telephone me-2"></i>Call</a></li>
+                    {% if client.source == "hubspot" %}
+                    <li><a class="dropdown-item" href="/outbound_call" onclick="fillOutboundForm('{{ client.name }}', '{{ client.phone_no }}')"><i class="bi bi-telephone-plus me-2"></i>Make AI Call</a></li>
+                    {% endif %}
+                    {% if client.audio_url %}
+                    <li><a class="dropdown-item" href="{{ client.audio_url.url }}" target="_blank"><i class="bi bi-play-circle me-2"></i>Play Audio</a></li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="editClient('{{ client.id }}', '{{ client.type }}')"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-10">
+                <i class="bi bi-inbox text-5xl text-afinity-300 block mb-3"></i>
+                <h5 class="font-display text-afinity-ink mb-1">No leads found</h5>
+                <p class="text-afinity-muted text-sm">Try adjusting your filters to see more results.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+<!-- Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-info-circle me-2 text-afinity-500"></i>Call Summary</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="summaryContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  calculateStats();
+});
+function calculateStats() {
+  const feedbackElements = document.querySelectorAll('td .badge');
+  let followUpCount = 0;
+  feedbackElements.forEach(badge => { if (badge.textContent.trim() === 'Follow Up') followUpCount++; });
+  const f = document.getElementById('followUpCount'); if (f) f.textContent = followUpCount;
+}
+function showSummary(clientId, summary) {
+  const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="af-chip mb-3">Client ID: ${clientId}</div>
+    <div class="rounded-xl border border-afinity-line p-5 bg-afinity-50/40">
+      <p class="mb-0 leading-relaxed text-afinity-ink2">${summary}</p>
+    </div>`;
+  modal.show();
+}
+function editClient(clientId, clientType) { alert('Edit functionality for ' + clientType + ' ID: ' + clientId + ' can be implemented here'); }
+function fillOutboundForm(name, phone) { localStorage.setItem('outboundLeadName', name); localStorage.setItem('outboundLeadPhone', phone); }
+</script>
+{% endblock %}

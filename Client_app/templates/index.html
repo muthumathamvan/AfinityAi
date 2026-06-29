@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+
+  <!-- Top bar (mobile burger + heading) -->
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation">
+      <i class="bi bi-list text-xl"></i>
+    </button>
+
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> Overview
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">Dashboard</h1>
+      <p class="text-afinity-muted text-sm mt-1 fade-in-delay">Intelligent call management at a glance.</p>
+    </div>
+
+    <!-- User identity card -->
+    <div class="w-full sm:w-auto">
+      <div class="bg-white rounded-2xl border border-afinity-line/70 shadow-soft flex items-center gap-4 py-3 px-4 slide-up" style="animation-delay:.15s;">
+        {% if request.user.is_authenticated and request.user.profile_image %}
+          <div class="avatar avatar-xl ring-2 ring-afinity-300/40">
+            <img src="{{ request.user.profile_image.url }}" alt="{{ request.user.username }}">
+          </div>
+        {% else %}
+          <div class="avatar avatar-xl ring-2 ring-afinity-300/40" style="background:linear-gradient(135deg,#EEC887,#B8935A);">
+            <span class="avatar-initial font-display text-xl font-bold" style="background:transparent;color:#1C1917;">
+              {% if request.user.is_authenticated %}{{ request.user.get_username|slice:":1"|upper }}{% else %}A{% endif %}
+            </span>
+          </div>
+        {% endif %}
+        <div class="leading-tight">
+          <p class="text-xs uppercase tracking-widest text-afinity-muted">Signed in</p>
+          <p class="font-display text-lg text-afinity-ink font-semibold">
+            {% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% else %}Guest{% endif %}
+          </p>
+          {% if request.user.is_authenticated and request.user.role %}
+            <p class="text-[10px] uppercase tracking-[0.2em] text-afinity-500 font-semibold">{{ request.user.get_role_display }}</p>
+          {% endif %}
+        </div>
+        <a href="/logout" class="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-xl border border-afinity-line hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-afinity-ink2 transition" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stat grid -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
+
+    <a href="/call_history" class="no-underline">
+      <div class="stat-card-small bg-primary slide-up" style="animation-delay:.05s;">
+        <div class="stat-content">
+          <h6>Total Calls</h6>
+          <h3 id="totalCall">{{ total_count }}</h3>
+        </div>
+        <i class="bi bi-telephone-fill stat-icon"></i>
+      </div>
+    </a>
+
+    <a href="/call_history" class="no-underline">
+      <div class="stat-card-small bg-success slide-up" style="animation-delay:.12s;">
+        <div class="stat-content">
+          <h6>Outbound Calls</h6>
+          <h3 id="successfulCall">{{ Total_count }}</h3>
+        </div>
+        <i class="bi bi-telephone-outbound-fill stat-icon"></i>
+      </div>
+    </a>
+
+    <a href="/inboundcall_loc" class="no-underline">
+      <div class="stat-card-small bg-warning slide-up" style="animation-delay:.19s;">
+        <div class="stat-content">
+          <h6>Inbound Calls</h6>
+          <h3 id="failedCallsStat">{{ inbound_count }}</h3>
+        </div>
+        <i class="bi bi-telephone-inbound-fill stat-icon"></i>
+      </div>
+    </a>
+
+    <a href="/widget_calls_loc" class="no-underline">
+      <div class="stat-card-small bg-info slide-up" style="animation-delay:.26s;">
+        <div class="stat-content">
+          <h6>Widget Calls</h6>
+          <h3 id="todaysCalls">{{ widget_data }}</h3>
+        </div>
+        <i class="bi bi-chat-dots-fill stat-icon"></i>
+      </div>
+    </a>
+  </section>
+
+  <!-- Recent activity table -->
+  <section class="card slide-up" style="animation-delay:.3s;">
+    <div class="card-header flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <h4 class="mb-1">Recent Call Activity</h4>
+        <p class="text-xs text-afinity-muted uppercase tracking-widest">Latest outbound engagements</p>
+      </div>
+      <a href="/call_history" class="inline-flex items-center gap-1 text-sm font-medium text-afinity-ink hover:text-afinity-500 transition">
+        View all <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Manager</th>
+              <th>Phone</th>
+              <th>Date</th>
+              <th class="text-end pr-6">Feedback</th>
+            </tr>
+          </thead>
+          <tbody id="recentCallsTable">
+            {% for datas in data %}
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar avatar-md">
+                    <img src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop" alt="">
+                  </div>
+                  <p class="font-medium text-afinity-ink mb-0">{{ datas.uploader_name }}</p>
+                </div>
+              </td>
+              <td><span class="text-afinity-ink2 font-mono text-sm">{{ datas.phone_no }}</span></td>
+              <td><span class="text-afinity-muted text-sm">{{ datas.date }}</span></td>
+              <td class="text-end pr-6"><span class="badge bg-success">{{ datas.feedback }}</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-10">
+                <i class="bi bi-inbox text-4xl text-afinity-300 block mb-2"></i>
+                <p class="text-afinity-muted text-sm mb-0">No recent calls yet. Your intelligent agents will populate this space once active.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer flex items-center justify-between flex-wrap gap-2">
+    <p>© 2026 Afinity AI · Crafted for enterprise excellence</p>
+    <p class="text-afinity-500 text-xs tracking-widest uppercase">Luxury · Corporate · Intelligent</p>
+  </footer>
+</main>
+
+<script>
+  // Sidebar toggle already handled in base.html
+  // Counter animation (optional)
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.stat-content h3').forEach(el => {
+      const target = parseInt(el.textContent.replace(/\D/g, '')) || 0;
+      if (!target) return;
+      let c = 0; const step = Math.max(1, Math.ceil(target / 40));
+      const t = setInterval(() => {
+        c += step;
+        if (c >= target) { el.textContent = target; clearInterval(t); }
+        else el.textContent = c;
+      }, 25);
+    });
+  });
+</script>
+{% endblock %}

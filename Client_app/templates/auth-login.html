@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — Afinity AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: {
+        afinity: { 50:'#FBF5EA',100:'#F5E8CE',200:'#EED9AB',300:'#EEC887',400:'#D6B06A',500:'#B8935A',600:'#8E6E40',
+                    ink:'#1C1917',ink2:'#2F2A26',muted:'#78716C',line:'#EBE4D6',cream:'hsl(40, 20%, 96%)' }
+      },
+      fontFamily: { display:['"Playfair Display"','serif'], sans:['Inter','sans-serif'] },
+    }}}
+  </script>
+  <style>
+    html,body { height: 100%; }
+    body { font-family:'Inter',sans-serif; background: hsl(40, 20%, 96%); }
+    .noise::before {
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 3px 3px; opacity:.6;
+    }
+  </style>
+</head>
+<body class="min-h-screen grid lg:grid-cols-2">
+
+  <!-- LEFT: Luxury brand panel -->
+  <aside class="relative hidden lg:flex flex-col justify-between overflow-hidden bg-afinity-ink text-white px-14 py-12 noise">
+    <!-- Decorative gold glow -->
+    <div class="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-afinity-300/15 blur-3xl"></div>
+    <div class="absolute bottom-0 -left-32 w-[420px] h-[420px] rounded-full bg-afinity-300/10 blur-3xl"></div>
+
+    <!-- Logo -->
+    <div class="relative z-10 flex items-center gap-3">
+      <span class="w-12 h-12 rounded-xl bg-gradient-to-br from-afinity-300 to-afinity-400 text-afinity-ink grid place-items-center font-display font-bold text-xl shadow-xl">A</span>
+      <span class="font-display font-semibold text-2xl tracking-tight">Afinity<span class="text-afinity-300">.ai</span></span>
+    </div>
+
+    <!-- Middle copy -->
+    <div class="relative z-10 max-w-md space-y-6">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-afinity-300/90 font-semibold">
+        <span class="w-6 h-px bg-afinity-300"></span> Conversational AI Platform
+      </span>
+      <h1 class="font-display text-5xl leading-[1.05] font-semibold">
+        Elegant voice agents,<br/>
+        engineered for<br/>
+        <span class="italic text-afinity-300">scale.</span>
+      </h1>
+      <p class="text-white/70 text-base leading-relaxed">
+        Manage outbound & inbound calls, orchestrate AI assistants and sync every lead
+        to your CRM — from a single, refined workspace.
+      </p>
+
+      <div class="grid grid-cols-3 gap-4 pt-4">
+        <div>
+          <p class="font-display text-2xl text-afinity-300">10k+</p>
+          <p class="text-xs text-white/60 uppercase tracking-widest">Calls/day</p>
+        </div>
+        <div>
+          <p class="font-display text-2xl text-afinity-300">98%</p>
+          <p class="text-xs text-white/60 uppercase tracking-widest">Uptime</p>
+        </div>
+        <div>
+          <p class="font-display text-2xl text-afinity-300">24/7</p>
+          <p class="text-xs text-white/60 uppercase tracking-widest">Always on</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 text-xs text-white/50 tracking-wide">
+      © 2026 Afinity AI — Advanced Conversational Engine
+    </div>
+  </aside>
+
+  <!-- RIGHT: Login form -->
+  <main class="flex items-center justify-center px-6 py-12 sm:px-10">
+    <div class="w-full max-w-md">
+
+      <!-- Mobile logo -->
+      <div class="flex lg:hidden items-center gap-3 mb-10">
+        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-afinity-300 to-afinity-400 text-afinity-ink grid place-items-center font-display font-bold shadow">A</span>
+        <span class="font-display font-semibold text-xl tracking-tight text-afinity-ink">Afinity<span class="text-afinity-500">.ai</span></span>
+      </div>
+
+      <div class="mb-8">
+        <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold">
+          <span class="w-5 h-px bg-afinity-400"></span> Welcome back
+        </span>
+        <h2 class="font-display text-4xl sm:text-5xl font-semibold text-afinity-ink mt-3 leading-tight">Sign in to<br/>your workspace</h2>
+        <p class="text-afinity-muted mt-3 text-sm">Enter your credentials to continue orchestrating voice intelligence.</p>
+      </div>
+
+      {% if message %}
+      <div class="mb-5 rounded-xl border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm flex items-start gap-2">
+        <i class="bi bi-exclamation-circle mt-0.5"></i>
+        <span>{{ message }}</span>
+      </div>
+      {% endif %}
+
+      <form action="/login" method="POST" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+
+        <!-- Username -->
+        <div>
+          <label for="username" class="block text-xs font-medium uppercase tracking-widest text-afinity-ink2 mb-2">Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-afinity-400">
+              <i class="bi bi-person"></i>
+            </span>
+            <input id="username" name="username" type="text" required
+                   placeholder="you@company.com"
+                   class="w-full rounded-xl border border-afinity-line bg-white pl-11 pr-4 py-3.5 text-sm text-afinity-ink placeholder:text-afinity-muted/70 focus:outline-none focus:ring-4 focus:ring-afinity-300/25 focus:border-afinity-300 transition">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="password" class="block text-xs font-medium uppercase tracking-widest text-afinity-ink2">Password</label>
+            <a href="#" class="text-xs text-afinity-500 hover:text-afinity-ink font-medium">Forgot?</a>
+          </div>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-afinity-400">
+              <i class="bi bi-lock"></i>
+            </span>
+            <input id="password" name="password" type="password" required
+                   placeholder="••••••••"
+                   class="w-full rounded-xl border border-afinity-line bg-white pl-11 pr-12 py-3.5 text-sm text-afinity-ink placeholder:text-afinity-muted/70 focus:outline-none focus:ring-4 focus:ring-afinity-300/25 focus:border-afinity-300 transition">
+            <button type="button" onclick="togglePw()" class="absolute inset-y-0 right-0 flex items-center pr-4 text-afinity-400 hover:text-afinity-ink transition" aria-label="Show password">
+              <i id="pwIcon" class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember -->
+        <label class="flex items-center gap-2 text-sm text-afinity-muted cursor-pointer select-none">
+          <input type="checkbox" class="rounded border-afinity-line text-afinity-ink focus:ring-afinity-300/30">
+          <span>Keep me signed in for 30 days</span>
+        </label>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="group w-full inline-flex items-center justify-center gap-2 rounded-xl bg-afinity-ink text-white font-medium py-3.5 text-sm tracking-wide shadow-lg shadow-afinity-ink/20 hover:bg-afinity-ink2 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          Sign in securely
+          <i class="bi bi-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </button>
+
+        <!-- Divider + brand -->
+        <div class="relative py-2">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-afinity-line"></div></div>
+          <div class="relative text-center"><span class="bg-afinity-cream px-3 text-xs uppercase tracking-widest text-afinity-muted">Enterprise grade</span></div>
+        </div>
+
+        <div class="text-center text-xs text-afinity-muted">
+          Protected by role-based access &amp; end-to-end encryption.
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    function togglePw() {
+      const pw = document.getElementById('password');
+      const icon = document.getElementById('pwIcon');
+      if (pw.type === 'password') { pw.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+      else { pw.type = 'password'; icon.className = 'bi bi-eye'; }
+    }
+  </script>
+</body>
+</html>

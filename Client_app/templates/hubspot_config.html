@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}HubSpot Configuration — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> Integrations
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">HubSpot Configuration</h1>
+      <p class="text-afinity-muted text-sm mt-1">Connect your HubSpot workspace for seamless lead sync.</p>
+    </div>
+    <nav aria-label="breadcrumb" class="breadcrumb-header">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">HubSpot Config</li>
+      </ol>
+    </nav>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Settings form -->
+    <section class="card slide-up lg:col-span-2">
+      <div class="card-header flex items-center gap-3">
+        <span class="w-10 h-10 rounded-xl bg-afinity-50 text-afinity-500 grid place-items-center"><i class="bi bi-plug-fill"></i></span>
+        <h4 class="mb-0">HubSpot Integration Settings</h4>
+      </div>
+      <div class="card-body">
+        <form id="hubspotConfigForm" class="space-y-5">
+          {% csrf_token %}
+
+          <div>
+            <label for="access_token" class="form-label">HubSpot Access Token</label>
+            <input type="password" class="form-control font-mono" id="access_token" name="access_token" placeholder="Enter your HubSpot private app access token" value="{{ config.access_token|default:'' }}" required>
+            <p class="form-text">Get your token from HubSpot → Settings → Integrations → Private Apps</p>
+          </div>
+
+          <div>
+            <label for="portal_id" class="form-label">HubSpot Portal ID</label>
+            <input type="text" class="form-control font-mono" id="portal_id" name="portal_id" placeholder="Enter your HubSpot portal ID" value="{{ config.portal_id|default:'' }}" required>
+            <p class="form-text">Find your Portal ID in HubSpot → Settings → Account Setup → Account Defaults</p>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Configuration</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Status + Actions -->
+    <aside class="space-y-5">
+      <div class="card slide-up">
+        <div class="card-header"><h4 class="mb-0">Current Status</h4></div>
+        <div class="card-body">
+          {% if config %}
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle me-1"></i>
+              <strong>Active Configuration</strong><br>
+              Portal ID: <span class="font-mono">{{ config.portal_id }}</span><br>
+              Last Updated: {{ config.updated_at|date:"M d, Y H:i" }}
+            </div>
+          {% else %}
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              <strong>No Configuration</strong><br>
+              Configure credentials to enable automatic data sync.
+            </div>
+          {% endif %}
+
+          <div class="mt-4 space-y-3">
+            <h6 class="text-afinity-ink">Data Sync Options</h6>
+            <button type="button" class="btn btn-info w-100" id="syncExistingBtn">
+              <i class="bi bi-upload me-2"></i>Sync TO HubSpot
+            </button>
+            <small class="text-afinity-muted block">Sync last 10 call records to HubSpot</small>
+
+            <button type="button" class="btn btn-success w-100" id="syncFromHubspotBtn">
+              <i class="bi bi-download me-2"></i>Sync FROM HubSpot
+            </button>
+            <small class="text-afinity-muted block">Pull new leads from HubSpot to dashboard</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="card slide-up">
+        <div class="card-header"><h4 class="mb-0">Setup Instructions</h4></div>
+        <div class="card-body">
+          <ol class="space-y-2 text-sm text-afinity-ink2 list-decimal list-inside">
+            <li>Go to your HubSpot account</li>
+            <li>Navigate to Settings → Integrations → Private Apps</li>
+            <li>Create a new private app or use existing one</li>
+            <li>Grant necessary scopes: contacts (read/write), notes (write)</li>
+            <li>Copy the access token and portal ID</li>
+            <li>Paste them in the form and save</li>
+          </ol>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('hubspotConfigForm');
+  const syncBtn = document.getElementById('syncExistingBtn');
+  const syncFromBtn = document.getElementById('syncFromHubspotBtn');
+
+  form.addEventListener('submit', function(e) { e.preventDefault(); saveConfiguration(); });
+  syncBtn.addEventListener('click', syncExistingData);
+  syncFromBtn.addEventListener('click', syncFromHubSpot);
+
+  function saveConfiguration() {
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    fetch('{% url "save_hubspot_config" %}', { method:'POST', body: formData })
+      .then(r => r.json())
+      .then(data => {
+        showAlert(data.success ? 'success' : 'error', data.message);
+        if (data.success) setTimeout(() => location.reload(), 1200);
+      })
+      .catch(() => showAlert('error', 'An error occurred while saving configuration'))
+      .finally(() => { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="bi bi-save me-2"></i>Save Configuration'; });
+  }
+
+  function syncExistingData() {
+    syncBtn.disabled = true; syncBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Syncing...';
+    fetch('{% url "sync_existing_data" %}', { method:'POST', headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 'Content-Type':'application/x-www-form-urlencoded' } })
+      .then(r => r.json()).then(data => showAlert(data.success?'success':'error', data.message))
+      .catch(() => showAlert('error','An error occurred while syncing data'))
+      .finally(() => { syncBtn.disabled = false; syncBtn.innerHTML = '<i class="bi bi-upload me-2"></i>Sync TO HubSpot'; });
+  }
+
+  function syncFromHubSpot() {
+    syncFromBtn.disabled = true; syncFromBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Syncing...';
+    fetch('{% url "sync_hubspot_leads" %}', { method:'POST', headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 'Content-Type':'application/x-www-form-urlencoded' } })
+      .then(r => r.json()).then(data => showAlert(data.success?'success':'error', data.message))
+      .catch(() => showAlert('error','An error occurred while syncing leads from HubSpot'))
+      .finally(() => { syncFromBtn.disabled = false; syncFromBtn.innerHTML = '<i class="bi bi-download me-2"></i>Sync FROM HubSpot'; });
+  }
+
+  function showAlert(type, message) {
+    const cls = type === 'success' ? 'alert-success' : type === 'warning' ? 'alert-warning' : 'alert-danger';
+    const html = `<div class="alert ${cls} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    const container = document.querySelector('main#main');
+    container.insertAdjacentHTML('afterbegin', html);
+    setTimeout(() => { const a = container.querySelector('.alert'); if (a) a.remove(); }, 5000);
+  }
+});
+</script>
+{% endblock %}

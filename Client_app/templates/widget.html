@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Widget Call History — Afinity AI{% endblock %}
+{% block content %}
+
+<main id="main" class="flex-1">
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> Widget
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">Widget Call History</h1>
+      <p class="text-afinity-muted text-sm mt-1">Embedded web-widget AI call records.</p>
+    </div>
+  </header>
+
+  <section class="card slide-up">
+    <div class="card-body">
+
+      <!-- Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
+        <div class="lg:col-span-2">
+          <label class="form-label">Search</label>
+          <input id="searchInput" class="form-control" placeholder="Type to filter…"/>
+        </div>
+        <div>
+          <label class="form-label">From</label>
+          <input type="date" id="fromDate" class="form-control"/>
+        </div>
+        <div>
+          <label class="form-label">To</label>
+          <input type="date" id="toDate" class="form-control"/>
+        </div>
+        <div class="flex items-end">
+          <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">Clear</button>
+        </div>
+        <div class="flex items-end gap-2">
+          <button class="btn btn-danger w-100" onclick="deleteSelected()">Delete</button>
+          <a href="/widget_calls" class="btn call-btn w-100"><i class="bi bi-arrow-clockwise"></i></a>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive rounded-xl border border-afinity-line/60 overflow-hidden">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th style="width:40px;"><input type="checkbox" class="form-check-input" onclick="toggleAll(this)"></th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Direction</th>
+              <th class="text-end pr-4">Details</th>
+            </tr>
+          </thead>
+          <tbody id="callHistoryBody"></tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-center mt-5"><ul class="pagination" id="pagination"></ul></div>
+    </div>
+  </section>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+<div class="modal fade" id="callDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-info-circle me-2 text-afinity-500"></i>Call Details</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="callDetailsBody">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let callHistory = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetchCalls();
+  document.getElementById("searchInput").addEventListener("input", () => { currentPage = 1; fetchCalls(); });
+  document.getElementById("fromDate").addEventListener("change", () => { currentPage = 1; fetchCalls(); });
+  document.getElementById("toDate").addEventListener("change", () => { currentPage = 1; fetchCalls(); });
+});
+
+function fetchCalls() {
+  const search = document.getElementById("searchInput").value;
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
+  fetch(`/widget/api/?search=${search}&from_date=${fromDate}&to_date=${toDate}&page=${currentPage}`)
+    .then(r => r.json())
+    .then(data => { callHistory = data.data; renderTable(callHistory); renderPagination(data.total_pages); });
+}
+function renderTable(data) {
+  const tbody = document.getElementById("callHistoryBody");
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5">
+      <i class="bi bi-inbox text-4xl text-afinity-300 block mb-2"></i>
+      <span class="text-afinity-muted text-sm">No calls found</span></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(call => `
+    <tr>
+      <td><input type="checkbox" class="row-check form-check-input" value="${call.id}"></td>
+      <td class="text-afinity-muted text-sm">${call.date}</td>
+      <td class="text-afinity-muted text-sm">${call.time}</td>
+      <td><span class="badge bg-success">${call.direction}</span></td>
+      <td class="text-end pr-4"><button class="btn btn-sm btn-outline-primary" onclick="viewCallDetails(${call.id})"><i class="bi bi-eye"></i> View</button></td>
+    </tr>`).join("");
+}
+function renderPagination(totalPages) {
+  const pagination = document.getElementById("pagination");
+  if (totalPages <= 1) { pagination.innerHTML = ""; return; }
+  let html = "";
+  for (let i = 1; i <= totalPages; i++) html += `<li class="page-item ${i===currentPage?'active':''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+  pagination.innerHTML = html;
+}
+function changePage(page) { currentPage = page; fetchCalls(); }
+function clearFilters() {
+  document.getElementById("searchInput").value=''; document.getElementById("fromDate").value=''; document.getElementById("toDate").value='';
+  currentPage = 1; fetchCalls();
+}
+function toggleAll(source) { document.querySelectorAll(".row-check").forEach(cb => cb.checked = source.checked); }
+function getCSRFToken() { return document.cookie.split("; ").find(r => r.startsWith("csrftoken="))?.split("=")[1]; }
+function deleteSelected() {
+  const ids = Array.from(document.querySelectorAll(".row-check:checked")).map(cb => cb.value);
+  if (!ids.length) { alert("Please select at least one record."); return; }
+  if (!confirm(`Delete ${ids.length} selected records?`)) return;
+  fetch("/widget/delete-selected/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+    body: JSON.stringify({ ids })
+  }).then(r => r.json()).then(data => {
+    if (data.deleted !== undefined) { alert(`${data.deleted} records deleted successfully`); fetchCalls(); }
+    else alert("Delete failed");
+  }).catch(() => alert("Delete failed"));
+}
+function viewCallDetails(id) {
+  const call = callHistory.find(c => c.id === id);
+  if (!call) return;
+  const audioUrl = `/call-audio/${call.conversation_id}/`;
+  document.getElementById("callDetailsBody").innerHTML = `
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <div><dt class="text-xs uppercase tracking-widest text-afinity-muted">Date</dt><dd class="font-medium">${call.date}</dd></div>
+      <div><dt class="text-xs uppercase tracking-widest text-afinity-muted">Time</dt><dd class="font-medium">${call.time}</dd></div>
+      <div><dt class="text-xs uppercase tracking-widest text-afinity-muted">Source</dt><dd class="font-mono">${call.external_number}</dd></div>
+      <div><dt class="text-xs uppercase tracking-widest text-afinity-muted">Direction</dt><dd><span class="badge bg-success">${call.direction}</span></dd></div>
+    </dl>
+    ${call.transcript ? `<div class="mt-5"><p class="text-xs uppercase tracking-widest text-afinity-muted mb-2">Summary</p><p class="text-afinity-ink2 leading-relaxed">${call.transcript}</p></div>` : ''}
+    ${call.has_audio ? `<div class="mt-5"><p class="text-xs uppercase tracking-widest text-afinity-muted mb-2">Recording</p><audio controls class="w-full rounded-lg"><source src="${audioUrl}" type="audio/mpeg"></audio></div>` : `<p class="text-afinity-muted text-sm mt-4">No recording available</p>`}
+  `;
+  new bootstrap.Modal(document.getElementById("callDetailsModal")).show();
+}
+</script>
+{% endblock %}

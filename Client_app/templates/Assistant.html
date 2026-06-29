@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Assistant — Afinity AI{% endblock %}
+{% block content %}
+
+<style>
+  .voice-toggle { background: var(--af-surface-muted); padding: 4px; border-radius: 999px; display: inline-flex; border: 1px solid var(--af-line-soft); }
+  .voice-toggle button { border: none; background: transparent; padding: 8px 22px; border-radius: 999px; transition: .25s; font-weight: 500; font-size: .85rem; color: var(--af-ink-500); }
+  .voice-toggle button.active { background: var(--af-ink); color: #fff; }
+  .voice-card { background: #fff; border: 1px solid var(--af-line-soft); border-radius: var(--af-radius-lg); padding: 22px; cursor: pointer; text-align: center; transition: .25s; }
+  .voice-card:hover { border-color: var(--af-primary); transform: translateY(-2px); }
+  .voice-card.active { border: 2px solid var(--af-primary); box-shadow: 0 10px 24px -10px rgba(238,200,135,.55); }
+  .voice-card img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; margin: 10px auto; border: 3px solid var(--af-primary-50); }
+  .voice-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--af-primary-50); color: var(--af-ink); font-size: .72rem; font-weight: 500; letter-spacing: .04em; margin-top: 8px; }
+</style>
+
+<main id="main" class="flex-1">
+
+  <header class="flex items-start gap-3 mb-8 flex-wrap">
+    <button class="burger-btn" aria-label="Open navigation"><i class="bi bi-list text-xl"></i></button>
+    <div class="flex-1 min-w-0">
+      <span class="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-afinity-500 font-semibold fade-in">
+        <span class="w-5 h-px bg-afinity-400"></span> AI Engine
+      </span>
+      <h1 class="font-display text-3xl sm:text-4xl font-semibold text-afinity-ink mt-2 fade-in-delay">Create Assistant</h1>
+      <p class="text-afinity-muted text-sm mt-1">Define prompt, voice &amp; persona for your new agent.</p>
+    </div>
+  </header>
+
+  <form method="POST" action="{% url 'create_ai' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="voice_name" id="selectedVoice">
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT: Prompt -->
+      <section class="card slide-up lg:col-span-4 p-6">
+        <h4 class="mb-2">Single Prompt</h4>
+        <p class="text-afinity-muted text-sm mb-5">Craft a foundational system prompt for simple workflows.</p>
+
+        <label class="form-label">System Prompt</label>
+        <textarea name="system_prompt" class="form-control" rows="8" placeholder="You are a helpful AI assistant…"></textarea>
+
+        <div class="mt-5">
+          <label class="form-label">Knowledge Base</label>
+          <input type="file" id="fileInput" name="uploaded_files" class="form-control" multiple>
+          <ul id="fileList" class="mt-3 space-y-2"></ul>
+        </div>
+
+        <div class="mt-6">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-stars me-2"></i>Create AI Assistant
+          </button>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <section class="card slide-up p-6">
+          <h4 class="mb-5">Agent basics</h4>
+
+          <div class="mb-4">
+            <label class="form-label">Agent Name *</label>
+            <input type="text" name="agent_name" class="form-control" required>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Primary Language *</label>
+              <select name="primary_language" class="form-select" required>
+                <option value="English (US)">English (US)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Secondary Language</label>
+              <select name="secondary_languages" class="form-select" multiple size="1">
+                <option value="Malay">Malay</option>
+                <option value="Thai">Thai</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Indonesia">Indonesia</option>
+                <option value="Japanese">Japanese</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Tenant</label>
+              <select name="tenant_id" class="form-select">
+                <option value="">Select Tenant</option>
+                {% for t in data %}
+                <option value="{{ t.tenant_id }}">{{ t.tenant_id }} - {{ t.tenant_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Branch</label>
+              <select name="branch_id" class="form-select">
+                <option value="">Select Branch</option>
+                {% for b in data %}
+                <option value="{{ b.branch_id }}">{{ b.branch_id }} - {{ b.branch_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Voice Setup -->
+        <section class="card slide-up p-6">
+          <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
+            <div>
+              <h4 class="mb-1">Set up voice</h4>
+              <small class="text-afinity-muted">Choose the tone of your assistant's voice.</small>
+            </div>
+            <div class="voice-toggle">
+              <button type="button" class="active" onclick="filterVoice('female', this)">Female</button>
+              <button type="button" onclick="filterVoice('male', this)">Male</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div><div class="voice-card" data-voice="Sara"  data-gender="female" data-audio="{% static 'audio/sara.mpeg' %}"  onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">Sara</h6><img src="{% static 'sara.jpeg' %}" alt="Sara"><div class="voice-badge">Most Used</div></div></div>
+            <div><div class="voice-card" data-voice="Dina"  data-gender="female" data-audio="{% static 'audio/Dina.mpeg' %}"  onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">Dina</h6><img src="{% static 'Dina.jpeg' %}" alt="Dina"><div class="voice-badge">Most Used</div></div></div>
+            <div><div class="voice-card" data-voice="James" data-gender="male"   data-audio="{% static 'audio/James.mpeg' %}" onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">James</h6><img src="{% static 'James.jpeg' %}" alt="James"><div class="voice-badge">Most Used</div></div></div>
+            <div><div class="voice-card" data-voice="Mei"   data-gender="female" data-audio="{% static 'audio/mei.mpeg' %}"   onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">Mei</h6><img src="{% static 'Mei.jpeg' %}" alt="Mei"><div class="voice-badge">Neutral</div></div></div>
+            <div><div class="voice-card" data-voice="Farid" data-gender="male"   data-audio="{% static 'audio/Farid.mpeg' %}" onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">Farid</h6><img src="{% static 'Farid.jpeg' %}" alt="Farid"><div class="voice-badge">Most Used</div></div></div>
+            <div><div class="voice-card" data-voice="Lucy"  data-gender="female" data-audio="{% static 'audio/Lucy.mpeg' %}"  onclick="selectVoice(this)"><h6 class="mb-0 font-display text-lg text-afinity-ink">Lucy</h6><img src="{% static 'Lucy.jpeg' %}" alt="Lucy"><div class="voice-badge">Most Used</div></div></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </form>
+
+  <footer class="footer"><p>© 2026 Afinity AI</p></footer>
+</main>
+
+<script>
+let currentAudio = null;
+let currentCard = null;
+
+function selectVoice(card) {
+  const audioSrc = card.getAttribute("data-audio");
+  if (currentCard === card && currentAudio && !currentAudio.paused) {
+    currentAudio.pause(); currentAudio.currentTime = 0;
+    card.classList.remove("active"); currentCard = null; return;
+  }
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  document.querySelectorAll(".voice-card").forEach(c => c.classList.remove("active"));
+  card.classList.add("active");
+  currentAudio = new Audio(audioSrc);
+  currentAudio.play();
+  currentCard = card;
+  currentAudio.onended = function () { card.classList.remove("active"); currentCard = null; };
+  document.getElementById("selectedVoice").value = card.getAttribute("data-voice");
+}
+
+function filterVoice(gender, button) {
+  document.querySelectorAll('.voice-toggle button').forEach(btn => btn.classList.remove('active'));
+  button.classList.add('active');
+  document.querySelectorAll('.voice-card').forEach(card => {
+    card.parentElement.style.display = card.getAttribute('data-gender') === gender ? 'block' : 'none';
+  });
+}
+
+const fileInput = document.getElementById("fileInput");
+const fileList = document.getElementById("fileList");
+let dt = new DataTransfer();
+fileInput.addEventListener("change", function() {
+  for (let file of this.files) dt.items.add(file);
+  fileInput.files = dt.files; renderFileList();
+});
+function renderFileList() {
+  fileList.innerHTML = "";
+  Array.from(dt.files).forEach((file, index) => {
+    const li = document.createElement("li");
+    li.className = "flex items-center justify-between gap-3 py-2 px-3 rounded-lg bg-afinity-50/60 border border-afinity-line/60";
+    li.innerHTML = `
+      <span class="flex-1 truncate text-sm text-afinity-ink2">${file.name}</span>
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">Remove</button>`;
+    fileList.appendChild(li);
+  });
+}
+function removeFile(index) {
+  const newDt = new DataTransfer();
+  Array.from(dt.files).forEach((file, i) => { if (i !== index) newDt.items.add(file); });
+  dt = newDt; fileInput.files = dt.files; renderFileList();
+}
+</script>
+{% endblock %}

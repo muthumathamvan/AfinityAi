@@ -1,0 +1,45 @@
+from django.urls import path
+from . import views2, crm, outbound_call
+from .views2 import stream_call_audio, delete_selected_widget_calls
+
+urlpatterns = [
+    path('', views2.login_view, name="login"),
+    path('login', views2.login_view, name="login"),
+    path('home', views2.home, name="home"),
+    path('logout', views2.logout_view, name="logout"),
+    path('ai_form', views2.ai_form, name="ai_form"),
+    path('call_process', views2.call_process),
+    path('call_history', views2.call_history, name='call_history'),
+    path('widget_calls_loc', views2.widget_calls_loc, name='widget_calls_loc'),
+    path("call-audio/<str:conversation_id>/", stream_call_audio, name="stream_call_audio"),
+    path("widget/delete-selected/", delete_selected_widget_calls,
+         name="delete_selected_widget_calls"),
+    path("tenant/delete-selected/", views2.delete_selected_tenants),
+    path("widget/api/", views2.widget_calls_api, name="widget_calls_api"),
+    path("branch/api/", views2.branch_api, name="branch_api"),
+    path("branch/delete-selected/", views2.delete_selected_branches, name="delete_selected_branches"),
+    path('widget_calls', views2.widget_calls, name='widget_calls'),
+    path('inboundcall', views2.inboundcall, name='inboundcall'),
+    path('inboundcall_loc', views2.inboundcall_loc, name="inboundcall_loc"),
+    path('crm/', crm.crm_dashboard, name="crm_dashboard"),
+    path('outbound_call/', outbound_call.outbound_call_form, name="outbound_call"),
+    path('client/', views2.client, name="client"),
+    path('branch/', views2.branch, name="branch"),
+    path('create_user/', views2.create_user_view, name='create_user'),
+    path('create_branch/', views2.create_branch, name="create_branch"),
+    path("assistant/", views2.assistant, name="assistant"),
+    path("create_ai/", views2.create_ai_assistant, name="create_ai"),
+    path("loader_page/", views2.loader_page, name="loader_page"),
+    path("assistant_list/", views2.assistant_list, name="assistant_list"),
+    path('widgetconfiguration/', views2.widgetconfiguration, name="widgetconfiguration"),
+    path("widgetconfiguration/<int:pk>/", views2.widget_configuration, name="widget_configuration"),
+    path('otp_password/', views2.otp_password, name='otp_password'),
+    path('book_meeting/', outbound_call.book_meeting, name="book_meeting"),
+    path('rate_us/', outbound_call.rate_us, name="rate_us"),
+    path('hubspot_config', views2.hubspot_config, name='hubspot_config'),
+    path('save_hubspot_config', views2.save_hubspot_config, name='save_hubspot_config'),
+    path('sync_existing_data', views2.sync_existing_data, name='sync_existing_data'),
+    path('sync_hubspot_leads', views2.sync_hubspot_leads, name='sync_hubspot_leads'),
+    path('auto_sync_hubspot', views2.auto_sync_hubspot, name='auto_sync_hubspot')
+   
+]
